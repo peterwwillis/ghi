@@ -203,6 +203,46 @@ module GHI
       }
     end
 
+    def format_issues2 issues, include_repo
+      return 'None.' if issues.empty?
+
+      include_repo and issues.each do |i|
+        %r{/repos/[^/]+/([^/]+)} === i['url'] and i['repo'] = $1
+      end
+
+      nmax, rmax = %w(number repo).map { |f|
+        issues.sort_by { |i| i[f].to_s.size }.last[f].to_s.size
+      }
+
+      issues.map { |i|
+        n, title, labels = i['number'], i['title'], i['labels']
+        s = i['state']
+        l = 9 + nmax + rmax + no_color { format_labels labels }.to_s.length
+        a = i['assignee']
+        a_is_me = a && a['login'] == Authorization.username
+        l += a['login'].to_s.length + 2 if a
+        p = i['pull_request']['html_url'] and l += 2 if i.key?('pull_request')
+        c = i['comments']
+        l += c.to_s.length + 1 unless c == 0
+        m = i['milestone']
+        empty_m = ''
+        empty_m = m['title'] if m
+        [
+          s,
+          (i['repo'].to_s.rjust(rmax) if i['repo']),
+          n.to_s,
+          ("[" + ( labels.map { |l| '%s' % l['name'] }.join ',') + "]" if labels),
+          #(fg('aaaaaa') { c } unless c == 0),
+          #(fg('aaaaaa') { '↑' } if p),
+          p,
+          title,
+          empty_m,
+          #(fg(a_is_me ? :yellow : :gray) { "@#{a['login']}" })
+        ].compact.join ','
+      }
+    end
+
+
     def extract_milestones_from_issues issues
       return 'None.' if issues.empty?
 

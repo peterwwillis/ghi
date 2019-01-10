@@ -108,14 +108,19 @@ module GHI
           opts.on(
             '-O', '--org <organization>', 'in repos within an organization you belong to'
           ) do |org|
-	    assigns[:org] = org
+            assigns[:org] = org
             @repo = nil
           end
-            opts.on(
-              '--by-milestone', 'filter by milestone'
-            ) do
-              assigns[:by_m] = true
-            end
+          opts.on(
+            '--by-milestone', 'filter by milestone'
+          ) do
+            assigns[:by_m] = true
+          end
+          opts.on(
+            '--machine-out', 'machine-parseable output'
+          ) do
+            assigns[:machine_out] = true
+          end
           opts.separator ''
         end
       end
@@ -171,6 +176,8 @@ module GHI
             else
               if assigns[:by_m]
                 puts format_issues_by_milestone(issues, repo.nil?)
+              elsif assigns[:machine_out]
+                puts format_issues2(issues, repo.nil?)
               else
                 puts format_issues(issues, repo.nil?)
               end
@@ -196,7 +203,7 @@ module GHI
         if repo
           url = "/repos/#{repo}"
         end
-	if assigns[:org]
+        if assigns[:org]
           url = "/orgs/#{assigns[:org]}"
         end
         return url << '/issues'
